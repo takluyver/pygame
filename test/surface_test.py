@@ -29,6 +29,9 @@ from pygame.locals import *
 from pygame.compat import xrange_, as_bytes, as_unicode
 from pygame._view import View
 
+import gc
+import weakref
+
 def intify(i):
     """If i is a long, cast to an int while preserving the bits"""
     if 0x80000000 & i:
@@ -382,6 +385,22 @@ class SurfaceTypeTest(unittest.TestCase):
         s = pygame.Surface((2, 4), 0, 32)
         s.get_view(as_unicode('2'))
         s.get_view(as_bytes('2'))
+        
+        # Garbage collection
+        s = pygame.Surface((2, 4), 0, 32)
+        weak_s = weakref.ref(s)
+        v = s.get_view('3')
+        weak_v = weakref.ref(v)
+        gc.collect()
+        self.assertTrue(weak_s() is s)
+        self.assertTrue(weak_v() is v)
+        del v
+        gc.collect()
+        self.assertTrue(weak_s() is s)
+        self.assertTrue(weak_v() is None)
+        del s
+        gc.collect()
+        self.assertTrue(weak_s() is None)
 
     def test_set_colorkey(self):
 
@@ -1522,6 +1541,24 @@ class SurfaceBlendTest (unittest.TestCase):
         self.assert_(s1.get_at((0, 0)) == (0, 0, 0, 255))
         self.assert_(s1.get_at((1, 1)) == color)
 
+
+        black = pygame.Color("black")
+        red = pygame.Color("red")
+        self.assertNotEqual(black, red)
+
+        surf = pygame.Surface((10, 10), 0, 32)
+        surf.fill(black)
+        subsurf = surf.subsurface(pygame.Rect(0, 1, 10, 8))
+        self.assertEqual(surf.get_at((0, 0)), black)
+        self.assertEqual(surf.get_at((0, 9)), black)
+
+        subsurf.fill(red, (0, -1, 10, 1), pygame.BLEND_RGB_ADD)
+        self.assertEqual(surf.get_at((0, 0)), black)
+        self.assertEqual(surf.get_at((0, 9)), black)
+
+        subsurf.fill(red, (0, 8, 10, 1), pygame.BLEND_RGB_ADD)
+        self.assertEqual(surf.get_at((0, 0)), black)
+        self.assertEqual(surf.get_at((0, 9)), black)
 
 
 

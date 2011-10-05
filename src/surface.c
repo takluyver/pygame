@@ -1446,13 +1446,24 @@ surf_fill (PyObject *self, PyObject *args, PyObject *keywds)
         sdlrect.w = rect->w;
         sdlrect.h = rect->h;
         
+
+
+
         // clip the rect to be within the surface.
+        if (sdlrect.x < 0) {
+            sdlrect.x = 0;
+        }
+        if (sdlrect.y < 0) {
+            sdlrect.y = 0;
+        }
+
         if(sdlrect.x + sdlrect.w > surf->w) {
             sdlrect.w = sdlrect.w + (surf->w - (sdlrect.x + sdlrect.w));
         }
         if(sdlrect.y + sdlrect.h > surf->h) {
             sdlrect.h = sdlrect.h + (surf->h - (sdlrect.y + sdlrect.h));
         }
+
 
 
         if (blendargs != 0) {
@@ -2180,6 +2191,7 @@ surf_get_view(PyObject *self, PyObject *args, PyObject *kwds)
         return 0;
     }
     view = PgView_New(capsule, self, surf_view_destr);
+    Py_DECREF(capsule);
     if (!view) {
         return 0;
     }
@@ -2362,7 +2374,10 @@ surf_arraystruct_capsule_destr(PyObject *capsule)
 static void
 surf_view_destr(PyObject *view)
 {
-    PySurface_UnlockBy(PgView_GetParent(view), view);
+    PyObject *surf = PgView_GetParent(view);
+
+    PySurface_UnlockBy(surf, view);
+    Py_DECREF(surf);
 }
 
 static PyObject *
