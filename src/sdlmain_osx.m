@@ -33,6 +33,15 @@
 #include "pgcompat.h"
 #include "scrap.h"
 
+#include <AvailabilityMacros.h>
+/* We support OSX 10.6 and below. */
+#if __MAC_OS_X_VERSION_MAX_ALLOWED <= 1060
+	#define PYGAME_MAC_SCRAP_OLD 1
+#endif
+
+
+
+
 struct CPSProcessSerNum
 {
 	UInt32 lo;
@@ -268,7 +277,9 @@ static PyObject*
 _ScrapGet(PyObject *self, PyObject *args) {
 	PyObject *ret = Py_None;
 	char *scrap_type;
-
+#if defined (PYGAME_MAC_SCRAP_OLD)
+	return Py_None;
+#else
 	if (!PyArg_ParseTuple (args, "s", &scrap_type))
 		return Py_None;
 
@@ -282,10 +293,14 @@ _ScrapGet(PyObject *self, PyObject *args) {
 		ret = PyUnicode_FromString([info UTF8String]);
 	[pool release];
 	return ret;
+#endif
 }
 
 static PyObject*
 _ScrapGetTypes(PyObject *self) {
+#if defined (PYGAME_MAC_SCRAP_OLD)
+	return Py_None;
+#else
 	PyObject *l = PyList_New(0);
 	NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
 	NSPasteboard *pb = [NSPasteboard generalPasteboard];
@@ -294,10 +309,14 @@ _ScrapGetTypes(PyObject *self) {
 		PyList_Append(l, PyUnicode_FromString([type UTF8String]));
 	[pool release];
 	return l;
+#endif
 }
 
 static PyObject*
 _ScrapPut(PyObject *self, PyObject *args) {
+#if defined (PYGAME_MAC_SCRAP_OLD)
+	return Py_None;
+#else
 	PyObject *ret = NULL;
 	char *scrap_type;
 	char *data;
@@ -316,18 +335,26 @@ _ScrapPut(PyObject *self, PyObject *args) {
 	[pb setString:ndata forType: NSStringPboardType];
 	[pool release];
 	return Py_None;
+#endif
 }
 
 static PyObject*
 _ScrapSetMode(PyObject *self, PyObject *args) {
+#if defined (PYGAME_MAC_SCRAP_OLD)
+	return Py_None;
+#else
 	char *mode;
 	if (!PyArg_ParseTuple (args, "s", &mode))
 		return Py_None;
 	return Py_None;
+#endif
 }
 
 static PyObject*
 _ScrapContains(PyObject *self, PyObject *args) {
+#if defined (PYGAME_MAC_SCRAP_OLD)
+	return Py_None;
+#else
 	char *mode;
 	int found = 0;
 	if (!PyArg_ParseTuple (args, "s", &mode))
@@ -342,10 +369,14 @@ _ScrapContains(PyObject *self, PyObject *args) {
 	[pool release];
 
 	return found ? Py_True : Py_False;
+#endif
 }
 
 static PyObject*
 _ScrapLost(PyObject *self) {
+#if defined (PYGAME_MAC_SCRAP_OLD)
+	return Py_None;
+#else
 	int found = 0;
 	NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
 	NSArray *supportedTypes =
@@ -356,6 +387,7 @@ _ScrapLost(PyObject *self) {
 	[pool release];
 
 	return found ? Py_False : Py_True;
+#endif
 }
 
 static PyMethodDef macosx_builtins[] =

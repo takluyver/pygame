@@ -18,6 +18,8 @@
 ##    Pete Shinners
 ##    pete@shinners.org
 
+from pygame.compat import unicode_
+
 THECOLORS = {
 'gray17' : (43, 43, 43, 255) ,
 'gold' : (255, 215, 0, 255) ,
@@ -677,3 +679,6 @@ THECOLORS = {
 'grey100' : (255, 255, 255, 255) ,
 'brown1' : (255, 64, 64, 255) ,
 }
+
+for k,v in THECOLORS.items():
+    THECOLORS[unicode_(k)] = v
