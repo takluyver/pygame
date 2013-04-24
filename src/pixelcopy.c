@@ -1191,8 +1191,6 @@ static PyMethodDef _pixelcopy_methods[] =
 
 MODINIT_DEFINE(pixelcopy)
 {
-    PyObject *module;
-
 #if PY3
     static struct PyModuleDef _module = {
         PyModuleDef_HEAD_INIT,
@@ -1217,11 +1215,8 @@ MODINIT_DEFINE(pixelcopy)
     }
 
 #if PY3
-    module = PyModule_Create(&_module);
+    return PyModule_Create(&_module);
 #else
-    module = Py_InitModule3("pixelcopy",
-                            _pixelcopy_methods,
-                            DOC_PYGAMEPIXELCOPY);
+    Py_InitModule3("pixelcopy", _pixelcopy_methods, DOC_PYGAMEPIXELCOPY);
 #endif
-    MODINIT_RETURN(module);
 }

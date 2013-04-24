@@ -37,11 +37,6 @@ $(document).ready(function () {
 			return _comments[link];
 		};
 
-		var searchButtonHtml = [
-			'<form action="http://nullege.com/codes/search" class="addcomment"><input type="hidden" value="', 
-			'" name="cq"><input type="submit" value="Search examples for ',
-			'"></form>'
-		];
 
 		var addCommentHtml = [
 			'<form action="http://www.pygame.org/docs/ref/comment_new.php" class="addcomment"><input type="hidden" value="',
@@ -67,8 +62,8 @@ $(document).ready(function () {
 			}
 
 			// Add "search internet for source code" buttons.
-			var searchButton = $(searchButtonHtml[0] + link + searchButtonHtml[1] + link + searchButtonHtml[2]);
-			$(el).next().append(searchButton);
+			//var searchButton = $(searchButtonHtml[0] + link + searchButtonHtml[1] + link + searchButtonHtml[2]);
+			//$(el).next().append(searchButton);
 
 			// Add show comments buttons.
 			var comments = getComments(link);
@@ -120,12 +115,22 @@ $(document).ready(function () {
 				})
 			}
 		});
-
-
-
 	});
 
 
+    var searchButtonHtml = [
+        '<form action="http://nullege.com/codes/search" class="addcomment"><input type="hidden" value="', 
+        '" name="cq"><input type="submit" value="Search examples for ',
+        '"></form>'
+    ];
 
-
+    // Add "search internet for source code" buttons.
+    $('dt.title').each(function (idx, el) {
+        var link = $(el).attr('id');
+        if (typeof link === "undefined") {
+            return;
+        }
+        var searchButton = $(searchButtonHtml[0] + link + searchButtonHtml[1] + link + searchButtonHtml[2]);
+        $(el).next().append(searchButton);
+    });
 });
