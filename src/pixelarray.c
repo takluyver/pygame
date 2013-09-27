@@ -47,7 +47,6 @@ typedef struct _pixelarray_t {
     PyObject *dict;        /* dict for subclassing */
     PyObject *weakrefs;    /* Weakrefs for subclassing */
     PyObject *surface;     /* Surface associated with the array */
-    PyObject *lock;        /* Lock object for the surface */
     Py_ssize_t shape[2];   /* (row,col) shape of array in pixels */
     Py_ssize_t strides[2]; /* (row,col) offsets in bytes */
     Uint8  *pixels;        /* Start of array data */
@@ -166,7 +165,7 @@ Text_ConcatAndDel(PyObject **string, PyObject *newpart)
 {
     PyObject *result = 0;
     if (*string && newpart) {
-        PyUnicode_Concat(*string, newpart);
+        result = PyUnicode_Concat(*string, newpart);
         Py_DECREF(*string);
         Py_DECREF(newpart);
     }
@@ -322,6 +321,8 @@ _pxarray_new_internal(PyTypeObject *type,
         return 0;
     }
 
+    self->weakrefs = 0;
+    self->dict = 0;
     if (!parent) {
         if (!surface) {
             Py_TYPE(self)->tp_free((PyObject *)self);
@@ -333,8 +334,7 @@ _pxarray_new_internal(PyTypeObject *type,
         self->parent = 0;
         self->surface = surface;
         Py_INCREF(surface);
-        self->lock = PySurface_LockLifetime(surface, (PyObject *)self);
-        if (!self->lock) {
+        if (!PySurface_LockBy(surface, (PyObject *)self)) {
             Py_DECREF(surface);
             Py_TYPE(self)->tp_free((PyObject *)self);
             return 0;
@@ -346,16 +346,12 @@ _pxarray_new_internal(PyTypeObject *type,
         surface = parent->surface;
         self->surface = surface;
         Py_INCREF(surface);
-        self->lock = parent->lock;
-        Py_INCREF(self->lock);
     }
     self->shape[0] = dim0;
     self->shape[1] = dim1;
     self->strides[0] = stride0;
     self->strides[1] = stride1;
     self->pixels = pixels;
-    self->weakrefs = 0;
-    self->dict = 0;
 
     return self;
 }
@@ -399,14 +395,18 @@ _pxarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 static void
 _pxarray_dealloc(PyPixelArray *self)
 {
-    PyObject_GC_UnTrack(self);
     if (self->weakrefs) {
-        PyObject_ClearWeakRefs ((PyObject *) self);
+        PyObject_ClearWeakRefs((PyObject *)self);
     }
-    Py_XDECREF(self->lock);
-    Py_XDECREF(self->parent);
-    Py_XDECREF(self->dict);
+    PyObject_GC_UnTrack(self);
+    if (self->parent) {
+        Py_DECREF(self->parent);
+    }
+    else {
+        PySurface_UnlockBy(self->surface, (PyObject *)self);
+    }
     Py_DECREF(self->surface);
+    Py_XDECREF(self->dict);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
@@ -419,9 +419,6 @@ _pxarray_traverse(PyPixelArray *self, visitproc visit, void *arg)
     Py_VISIT(self->surface);
     if (self->dict) {
         Py_VISIT(self->dict);
-    }
-    if (self->lock) {
-        Py_VISIT(self->lock);
     }
     if (self->parent) {
         Py_VISIT((PyObject *)self->parent);
@@ -1709,6 +1706,7 @@ _pxarray_subscript(PyPixelArray *array, PyObject *op)
         }
         /* A simple index. */
         i = PyNumber_AsSsize_t(val, PyExc_IndexError);
+        Py_DECREF(val);
 #else
         i = PyInt_Check(op) ? PyInt_AsLong(op) : PyLong_AsLong(op);
 #endif
@@ -1878,6 +1876,7 @@ _pxarray_ass_subscript(PyPixelArray *array, PyObject* op, PyObject* value)
         }
         /* A simple index. */
         i = PyNumber_AsSsize_t(val, PyExc_IndexError);
+        Py_DECREF(val);
 #else
         i = PyInt_Check(op) ? PyInt_AsLong (op) : PyLong_AsLong (op);
 #endif
