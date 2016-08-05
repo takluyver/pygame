@@ -74,7 +74,7 @@ class FontModuleTest( unittest.TestCase ):
 
     def test_get_fonts(self):
         fnts = pygame_font.get_fonts()
-        
+
         if not fnts:
             raise Exception(repr(fnts))
 
@@ -115,7 +115,7 @@ class FontModuleTest( unittest.TestCase ):
     def test_match_font_bold(self):
 
         fonts = pygame_font.get_fonts()
- 
+
         # Look for a bold font.
         for font in fonts:
             if pygame_font.match_font(font, bold=True) is not None:
@@ -176,12 +176,12 @@ class FontTest(unittest.TestCase):
         self.assertTrue(font_surface)
         screen.blit(font_surface, font_rect, font_rect)
         pygame.display.update()
-        self.assertEqual(tuple(screen.get_at((0,0)))[:3], (255, 255, 255))        
-        self.assertEqual(tuple(screen.get_at(font_rect.topleft))[:3], (255, 255, 255))        
-        
+        self.assertEqual(tuple(screen.get_at((0,0)))[:3], (255, 255, 255))
+        self.assertEqual(tuple(screen.get_at(font_rect.topleft))[:3], (255, 255, 255))
+
         # If we don't have a real display, don't do this test.
         # Transparent background doesn't seem to work without a read video card.
-        if os.environ.get('SDL_VIDEODRIVER') != 'dummy':       
+        if os.environ.get('SDL_VIDEODRIVER') != 'dummy':
             screen.fill((10, 10, 10))
             font_surface = f.render("   bar", True, (0, 0, 0), None)
             font_rect = font_surface.get_rect()
@@ -190,8 +190,8 @@ class FontTest(unittest.TestCase):
             screen.blit(font_surface, font_rect, font_rect)
             pygame.display.update()
             self.assertEqual(tuple(screen.get_at((0,0)))[:3], (10, 10, 10))
-            self.assertEqual(tuple(screen.get_at(font_rect.topleft))[:3], (10, 10, 10))        
-            
+            self.assertEqual(tuple(screen.get_at(font_rect.topleft))[:3], (10, 10, 10))
+
             screen.fill((10, 10, 10))
             font_surface = f.render("   bar", True, (0, 0, 0))
             font_rect = font_surface.get_rect()
@@ -251,7 +251,7 @@ class FontTypeTest( unittest.TestCase ):
     def test_metrics(self):
         # Ensure bytes decoding works correctly. Can only compare results
         # with unicode for now.
-        f = pygame_font.Font(None, 20);
+        f = pygame_font.Font(None, 20)
         um = f.metrics(as_unicode("."))
         bm = f.metrics(as_bytes("."))
         self.assert_(len(um) == 1)
